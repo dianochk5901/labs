@@ -1,0 +1,112 @@
+from operator import itemgetter
+
+class Dom:
+    """Дом"""
+    def __init__(self, id, number, area, street_id):
+        self.id = id
+        self.number = number
+        self.area = area
+        self.street_id = street_id
+
+class Ulitsa:
+    """Улица"""
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+class DomUlitsa:
+    """
+    'Дома на улице' для реализации 
+    связи многие-ко-многим
+    """
+    def __init__(self, street_id, dom_id):
+        self.street_id = street_id
+        self.dom_id = dom_id
+
+# Улицы
+streets = [
+    Ulitsa(1, 'Красная улица'),
+    Ulitsa(2, 'Зеленая улица'),
+    Ulitsa(3, 'Синяя улица'),
+    Ulitsa(4, 'Отделочная улица'),
+]
+
+# Дома
+houses = [
+    Dom(1, '10', 100, 1),
+    Dom(2, '20', 150, 1),
+    Dom(3, '30', 120, 2),
+    Dom(4, '40', 80, 2),
+    Dom(5, '50', 200, 3),
+]
+
+# Связь дома и улиц для отношения многие-ко-многим
+houses_streets = [
+    DomUlitsa(1, 1),
+    DomUlitsa(1, 2),
+    DomUlitsa(2, 3),
+    DomUlitsa(2, 4),
+    DomUlitsa(3, 5),
+    DomUlitsa(4, 5),
+]
+
+def main():
+    """Основная функция"""
+
+    # Соединение данных один-ко-многим 
+    one_to_many = [(h.number, h.area, s.name) 
+                   for s in streets 
+                   for h in houses 
+                   if h.street_id == s.id]
+    
+    # Соединение данных многие-ко-многим
+    many_to_many_temp = [(s.name, hs.street_id, hs.dom_id) 
+                         for s in streets 
+                         for hs in houses_streets 
+                         if s.id == hs.street_id]
+    
+    many_to_many = [(h.number, h.area, street_name) 
+                    for street_name, street_id, dom_id in many_to_many_temp
+                    for h in houses if h.id == dom_id]
+
+    print('Задание A1')
+    # Список всех домов, отсортированный по улицам
+    res_11 = sorted(one_to_many, key=itemgetter(2))
+    print(res_11)
+
+    print('\nЗадание A2')
+    res_12_unsorted = []
+    # Перебираем все улицы
+    for s in streets:
+        # Список домов на улице
+        s_houses = list(filter(lambda i: i[2] == s.name, one_to_many))
+        # Если улица не пустая        
+        if len(s_houses) > 0:
+            # Площади домов на улице
+            s_areas = [area for _, area, _ in s_houses]
+            # Суммарная площадь домов на улице
+            s_areas_sum = sum(s_areas)
+            res_12_unsorted.append((s.name, s_areas_sum))
+
+    # Сортировка по суммарной площади
+    res_12 = sorted(res_12_unsorted, key=itemgetter(1), reverse=True)
+    print(res_12)
+
+    print('\nЗадание A3')
+    res_13 = {}
+    # Перебираем все улицы
+    for s in streets:
+        if 'улица' in s.name:
+            # Список домов на улице
+            s_houses = list(filter(lambda i: i[2] == s.name, many_to_many))
+            # Только номера домов
+            s_house_numbers = [x for x, _, _ in s_houses]
+            # Добавляем результат в словарь
+            # ключ - улица, значение - список номеров домов
+            res_13[s.name] = s_house_numbers
+
+    print(res_13)
+
+if __name__ == '__main__':
+    main()
+
